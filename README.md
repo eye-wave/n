@@ -1,22 +1,54 @@
 # ru~~n~~ - Use the Right Script Runner
 
-**ru** is a CLI tool that automatically selects the correct script runner (like `npm`, `yarn`, `pnpm`, or `bun`) based on your project setup. It simplifies running scripts in environments where different tools are used. No need to remember which project uses what – just run `ru`!
+**ru** is a CLI tool inspired by [antfu-collective/ni](https://github.com/antfu-collective/ni), that automatically selects the correct script runner based on your project setup. 
+
+
+## Usage
+
+Instead of
+```bash
+$ cargo format
+error: no such command: `format`
+
+	Did you mean `fmt`?
+```
+you can just run
+```bash
+$ ru format
+# or aliased
+$ ru f
+```
+
+## Examples
+for every task / target / script / command you use, ru will try to run it with whatever your project uses
+
+`ru build` will execute the following commands, depending on your project setup:
+```bash
+$ ru build
+
+# npm run build
+# yarn run build
+# pnpm run build
+# bun run build
+# deno task build
+
+# cargo run --package xtask -- build
+# cargo build
+
+# make build
+# just build
+```
 
 ## Installation
 
 Clone this repository and run install.sh
 
 ```bash
-git clone repo:url
-```
-```bash
-./install.sh
-```
+$ git clone repo:url
+$ ./install.sh
 
-## Usage
-
-```bash
-ru
+# use with "--stable" or "-s"
+# if you prefer building with stable release of rust
 ```
 
 ## License
