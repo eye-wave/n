@@ -50,7 +50,7 @@ impl Runner {
             Self::Yarn => cmd!(sh, "yarn run {command}"),
             Self::Pnpm => cmd!(sh, "pnpm run {command}"),
             Self::Bun => cmd!(sh, "bun run {command}"),
-            Self::Deno => cmd!(sh, "deno run {command}"),
+            Self::Deno => cmd!(sh, "deno task {command}"),
             Self::Xtask => cmd!(sh, "cargo run --package xtask -- {command}"),
             Self::Cargo => cmd!(sh, "cargo {command}"),
             Self::Makefile => cmd!(sh, "make {command}"),
