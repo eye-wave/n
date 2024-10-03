@@ -20,7 +20,7 @@ $ ru f
 ```
 
 ## Examples
-for every task / target / script / command you use, ru will try to run it with whatever your project uses
+for every `task / target / script / command` you use, ru will try to run it with whatever your project uses.
 
 `ru build` will execute the following commands, depending on your project setup:
 ```bash
@@ -37,6 +37,42 @@ $ ru build
 
 # make build
 # just build
+```
+
+to speedup your workflow even more, you can chain as many `tasks / targets / scripts / commands` as you want.
+
+`ru f l` will execute the following commands, one after the other:
+```bash
+$ ru f l
+
+# npm run format
+# npm run lint
+
+# yarn run format
+# yarn run lint
+
+# pnpm run format
+# pnpm run lint
+
+# bun run format
+# bun run lint
+
+# deno task format
+# deno task lint
+
+
+# cargo run --package xtask -- format
+# cargo run --package xtask -- lint
+
+# cargo fmt
+# cargo clippy
+
+
+# make format
+# make lint
+
+# just format
+# just lint
 ```
 
 ## Installation
