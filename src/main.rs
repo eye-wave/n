@@ -1,5 +1,5 @@
 use search::find_runner_in_dir;
-use std::{env, path::PathBuf, sync::LazyLock};
+use std::{env, sync::LazyLock};
 
 mod error;
 mod runners;
@@ -11,7 +11,9 @@ static HELP_MESSAGE: LazyLock<String> =
     LazyLock::new(|| include_str!("./help.txt").replace("\\033", "\u{001B}"));
 
 fn main() -> Result<()> {
-    let runner = find_runner_in_dir(&PathBuf::from("."))?;
+    let current = env::current_dir()?;
+    let runner = find_runner_in_dir(&current)?;
+
     if let Some(runner) = runner {
         let args = env::args().skip(1).collect::<Vec<_>>();
 
