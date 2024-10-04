@@ -1,7 +1,6 @@
 use crate::Result;
 use xshell::{cmd, Shell};
 
-#[derive(Debug, PartialEq)]
 pub enum Runner {
     // javascript
     Npm,
@@ -20,8 +19,41 @@ pub enum Runner {
 }
 
 impl Runner {
+    fn to_string(&self) -> Option<&'static str> {
+        match self {
+            Self::Npm => Some("npm"),
+            Self::Yarn => Some("yarn"),
+            Self::Pnpm => Some("pnpm"),
+            Self::Bun => Some("bun"),
+            Self::Deno => Some("deno"),
+            _ => None,
+        }
+    }
+}
+
+enum Language {
+    Javascript,
+    Rust,
+    Other,
+}
+
+impl From<&Runner> for Language {
+    fn from(value: &Runner) -> Self {
+        match value {
+            Runner::Npm | Runner::Yarn | Runner::Pnpm | Runner::Bun | Runner::Deno => {
+                Self::Javascript
+            }
+            Runner::Xtask | Runner::Cargo => Self::Rust,
+            Runner::Justfile | Runner::Makefile => Self::Other,
+        }
+    }
+}
+
+impl Runner {
+    const JAVASCRIPT_NO_RUN_WITH: [&'static str; 2] = ["install", "update"];
+
     fn unalias_command<'a>(&self, command: &'a str) -> &'a str {
-        if *self == Self::Cargo {
+        if let Self::Cargo = *self {
             match command {
                 "d" | "dev" => return "run",
                 "f" | "format" => return "fmt",
@@ -31,9 +63,12 @@ impl Runner {
         }
 
         match command {
+            "i" => "install",
+            "u" => "update",
             "d" => "dev",
             "f" => "format",
             "l" => "lint",
+            "b" => "build",
             "t" => "test",
             "p" => "preview",
             "s" => "start",
@@ -45,11 +80,29 @@ impl Runner {
         let command = self.unalias_command(command);
         let sh = Shell::new()?;
 
+        let lang: Language = self.into();
+        if let Language::Javascript = lang {
+            if Self::JAVASCRIPT_NO_RUN_WITH.contains(&command) {
+                let script = match self {
+                    Self::Npm | Self::Yarn | Self::Pnpm | Self::Bun | Self::Deno => {
+                        let r = self.to_string().unwrap();
+                        Some(cmd!(sh, "{r} {command}"))
+                    }
+                    _ => None,
+                };
+
+                if let Some(script) = script {
+                    script.run()?;
+                    return Ok(());
+                }
+            }
+        }
+
         match self {
-            Self::Npm => cmd!(sh, "npm run {command}"),
-            Self::Yarn => cmd!(sh, "yarn run {command}"),
-            Self::Pnpm => cmd!(sh, "pnpm run {command}"),
-            Self::Bun => cmd!(sh, "bun run {command}"),
+            Self::Npm | Self::Yarn | Self::Pnpm | Self::Bun => {
+                let r = self.to_string().unwrap();
+                cmd!(sh, "{r} run {command}")
+            }
             Self::Deno => cmd!(sh, "deno task {command}"),
             Self::Xtask => cmd!(sh, "cargo run --package xtask -- {command}"),
             Self::Cargo => cmd!(sh, "cargo {command}"),
