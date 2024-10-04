@@ -26,6 +26,9 @@ impl Runner {
             Self::Pnpm => Some("pnpm"),
             Self::Bun => Some("bun"),
             Self::Deno => Some("deno"),
+
+            // implemented for javascript runner only
+            // becuase this function is usefull just for them
             _ => None,
         }
     }
@@ -80,21 +83,12 @@ impl Runner {
         let command = self.unalias_command(command);
         let sh = Shell::new()?;
 
-        let lang: Language = self.into();
-        if let Language::Javascript = lang {
+        if let Language::Javascript = self.into() {
             if Self::JAVASCRIPT_NO_RUN_WITH.contains(&command) {
-                let script = match self {
-                    Self::Npm | Self::Yarn | Self::Pnpm | Self::Bun | Self::Deno => {
-                        let r = self.to_string().unwrap();
-                        Some(cmd!(sh, "{r} {command}"))
-                    }
-                    _ => None,
-                };
+                let r = self.to_string().unwrap();
+                cmd!(sh, "{r} {command}").run()?;
 
-                if let Some(script) = script {
-                    script.run()?;
-                    return Ok(());
-                }
+                return Ok(());
             }
         }
 
