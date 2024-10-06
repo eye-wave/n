@@ -57,14 +57,14 @@ $ ru f l
 ## Advanced use
 
 You can also add arguments and flags directly to commands.
-For example: `ru a "chalk cheerio" -d test`
+For example: `ru a "vite postcss tailwindcss" -d test`
 ```bash
 $ ru add "vite postcss tailwindcss" --save-dev test
 
-# npm add chalk cheerio --save-dev
+# npm add vite postcss tailwindcss --save-dev
 # npm test
 
-# yarn add chalk cheerio --save-dev
+# yarn add vite postcss tailwindcss --save-dev
 # yarn test
 
 # ...
