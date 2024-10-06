@@ -5,9 +5,9 @@ const HELP_MESSAGE: &str = "${A4}Usage${A0}: ru [SCRIPT1] [SCRIPT2] ...
 
 ${A4}Default aliases${A0}:
   Cargo only:
-    dev, d: run
-    format, f: fmt
-    lint, l: clippy
+    ${A1}dev${A0}, ${A1}d${A0}: run
+    ${A1}format${A0}, ${A1}f${A0}: fmt
+    ${A1}lint${A0}, ${A1}l${A0}: clippy
 
   ${A1}a${A0}: add
   ${A1}d${A0}: dev
