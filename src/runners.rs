@@ -1,4 +1,4 @@
-use std::process::{Command, ExitStatus};
+use std::process::{Command, ExitCode, ExitStatus};
 
 #[derive(PartialEq)]
 pub enum Runner {
@@ -112,5 +112,12 @@ impl Runner {
         }
 
         spawn(runner_name, &subargs)
+    }
+}
+
+pub fn bool_to_exit(status: bool) -> ExitCode {
+    match status {
+        true => ExitCode::SUCCESS,
+        false => ExitCode::FAILURE,
     }
 }

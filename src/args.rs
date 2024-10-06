@@ -1,8 +1,10 @@
+use std::env;
+
 #[derive(Debug)]
 pub enum ArgType {
     Flag,
     Subargs,
-    None,
+    Command,
 }
 
 impl From<&str> for ArgType {
@@ -21,7 +23,20 @@ impl From<&str> for ArgType {
 
         match is_flag {
             true => Self::Flag,
-            false => Self::None,
+            false => Self::Command,
         }
     }
+}
+
+/// Collects arguments from std::env,
+/// adds empty string to the end
+pub fn collect_args() -> Vec<String> {
+    let mut args = env::args().skip(1).collect::<Vec<_>>();
+    args.push("".into());
+
+    args
+}
+
+pub fn split_into_subargs(arg: &str) -> Vec<&str> {
+    arg.split_ascii_whitespace().collect()
 }

@@ -1,10 +1,33 @@
-use args::ArgType;
+use args::*;
+use runners::bool_to_exit;
 use search::find_runner_in_dir;
 use std::{env, process::ExitCode};
 
 mod args;
 mod runners;
 mod search;
+
+enum IterResult {
+    GlobalFlag,
+    SubargFlag,
+    Subargs,
+    Command(usize),
+    Empty,
+}
+
+macro_rules! print_exit {
+    ($msg:expr) => {{
+        println!("{}", $msg);
+        return Ok(ExitCode::SUCCESS);
+    }};
+}
+
+macro_rules! print_fail {
+    ($msg:expr) => {{
+        eprintln!("{}", $msg);
+        return Ok(ExitCode::FAILURE);
+    }};
+}
 
 fn main() -> Result<ExitCode, std::io::Error> {
     let current = env::current_dir()?;
@@ -18,65 +41,53 @@ fn main() -> Result<ExitCode, std::io::Error> {
         let mut is_quiet = false;
 
         for (i, arg) in args.iter().enumerate() {
-            match ArgType::from(arg.as_str()) {
-                ArgType::Flag => {
-                    if last_command_i.is_some() {
-                        subarg_stack.push(arg.as_str())
-                    } else {
-                        match arg.as_str() {
-                            "--version" | "-V" => {
-                                println!("{}", env!("CARGO_PKG_VERSION"));
-                                return Ok(ExitCode::SUCCESS);
-                            }
-                            "--help" | "-h" => {
-                                println!("{}", include_str!("../target/help_message.txt"));
-                                return Ok(ExitCode::SUCCESS);
-                            }
-                            "--quiet" | "-q" => is_quiet = true,
-                            _ => {}
-                        }
+            let arg_type = ArgType::from(arg.as_str());
+            let iter_result: IterResult = match arg_type {
+                ArgType::Flag => match last_command_i {
+                    Some(_) => IterResult::GlobalFlag,
+                    None => IterResult::SubargFlag,
+                },
+                ArgType::Subargs => IterResult::Subargs,
+                ArgType::Command => match last_command_i {
+                    Some(i) => IterResult::Command(i),
+                    None => IterResult::Empty,
+                },
+            };
+
+            match iter_result {
+                IterResult::GlobalFlag => match arg.as_str() {
+                    "--version" | "-V" => print_exit!(env!("CARGO_PKG_VERSION")),
+                    "--help" | "-h" => print_exit!(include_str!("../target/help_message.txt")),
+                    "--quiet" | "-q" => is_quiet = true,
+                    _ => {}
+                },
+                IterResult::SubargFlag => subarg_stack.push(arg.as_str()),
+                IterResult::Subargs => subarg_stack.extend(split_into_subargs(arg)),
+                IterResult::Command(i) => {
+                    let command = &args[i];
+
+                    let status = runner.run(command, &subarg_stack, is_quiet)?;
+                    subarg_stack.clear();
+
+                    if !status.success() {
+                        return Ok(ExitCode::FAILURE);
                     }
                 }
-                ArgType::Subargs => {
-                    subarg_stack.extend(arg.split_ascii_whitespace().collect::<Vec<_>>())
-                }
-                ArgType::None => {
-                    if let Some(last_i) = last_command_i {
-                        let command = &args[last_i];
+                _ => {}
+            }
 
-                        let status = runner.run(command, &subarg_stack, is_quiet)?;
-                        subarg_stack.clear();
-
-                        if !status.success() {
-                            return Ok(ExitCode::FAILURE);
-                        }
-                    }
-
-                    last_command_i = Some(i);
-                }
+            if let ArgType::Command = arg_type {
+                last_command_i = Some(i);
             }
         }
 
         if args.len() == 1 || last_command_i.is_none() {
             let status = runner.run("dev", &[], is_quiet)?;
-            return Ok(match status.success() {
-                true => ExitCode::SUCCESS,
-                false => ExitCode::FAILURE,
-            });
+            return Ok(bool_to_exit(status.success()));
         }
 
         return Ok(ExitCode::SUCCESS);
     }
 
-    eprintln!("No script runner config found in current directory.");
-    Ok(ExitCode::FAILURE)
-}
-
-/// Collects arguments from std::env,
-/// adds empty string to the end
-fn collect_args() -> Vec<String> {
-    let mut args = env::args().skip(1).collect::<Vec<_>>();
-    args.push("".into());
-
-    args
+    print_fail!("No script runner config found in current directory.")
 }
