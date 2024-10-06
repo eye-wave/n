@@ -11,12 +11,7 @@ fn main() -> Result<ExitCode, std::io::Error> {
     let runner = find_runner_in_dir(&current)?;
 
     if let Some(runner) = runner {
-        let args = {
-            let mut args = env::args().skip(1).collect::<Vec<_>>();
-            args.push("".into());
-
-            args
-        };
+        let args = collect_args();
 
         let mut last_command_i: Option<usize> = None;
         let mut subarg_stack = Vec::new();
@@ -60,14 +55,14 @@ fn main() -> Result<ExitCode, std::io::Error> {
                     last_command_i = Some(i);
                 }
             }
+        }
 
-            if args.len() == 1 || args.len() == 2 && is_quiet {
-                let status = runner.run("dev", &[], is_quiet)?;
-                return Ok(match status.success() {
-                    true => ExitCode::SUCCESS,
-                    false => ExitCode::FAILURE,
-                });
-            }
+        if args.len() == 1 || last_command_i.is_none() {
+            let status = runner.run("dev", &[], is_quiet)?;
+            return Ok(match status.success() {
+                true => ExitCode::SUCCESS,
+                false => ExitCode::FAILURE,
+            });
         }
 
         return Ok(ExitCode::SUCCESS);
@@ -75,4 +70,13 @@ fn main() -> Result<ExitCode, std::io::Error> {
 
     eprintln!("No script runner config found in current directory.");
     Ok(ExitCode::FAILURE)
+}
+
+/// Collects arguments from std::env,
+/// adds empty string to the end
+fn collect_args() -> Vec<String> {
+    let mut args = env::args().skip(1).collect::<Vec<_>>();
+    args.push("".into());
+
+    args
 }
