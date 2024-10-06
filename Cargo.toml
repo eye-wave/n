@@ -1,9 +1,11 @@
 [package]
 name = "ru"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "Use the right script runner"
 license = "GPL-3.0-or-later"
 
-[dependencies]
-xshell = "0.2.6"
+build = "build.rs"
+
+[build-dependencies]
+regex-lite = "0.1.6"

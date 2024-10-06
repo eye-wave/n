@@ -20,7 +20,7 @@ $ ru f
 ```
 
 ## Examples
-for every `task / target / script / command` you use, ru will try to run it with whatever your project uses.
+For every `task / target / script / command` you use, ru will try to run it with whatever your project uses.
 
 `ru build` will execute the following commands, depending on your project setup:
 ```bash
@@ -39,7 +39,7 @@ $ ru build
 # just build
 ```
 
-to speedup your workflow even more, you can chain as many `tasks / targets / scripts / commands` as you want.
+To speedup your workflow even more, you can chain as many `tasks / targets / scripts / commands` as you want.
 
 `ru f l` will execute the following commands, one after the other:
 ```bash
@@ -51,29 +51,26 @@ $ ru f l
 # yarn run format
 # yarn run lint
 
-# pnpm run format
-# pnpm run lint
-
-# bun run format
-# bun run lint
-
-# deno task format
-# deno task lint
-
-
-# cargo run --package xtask -- format
-# cargo run --package xtask -- lint
-
-# cargo fmt
-# cargo clippy
-
-
-# make format
-# make lint
-
-# just format
-# just lint
+# ...
 ```
+
+## Advanced use
+
+You can also add arguments and flags directly to commands.
+For example: `ru a "chalk cheerio" -d test`
+```bash
+$ ru add "vite postcss tailwindcss" --save-dev test
+
+# npm add chalk cheerio --save-dev
+# npm test
+
+# yarn add chalk cheerio --save-dev
+# yarn test
+
+# ...
+```
+
+Every quoted string *(with at least one whitespace)* and flags until the next command, will be treated as subargs that will be executed with your command.
 
 ## Installation
 

@@ -1,6 +1,6 @@
-use crate::Result;
-use xshell::{cmd, Shell};
+use std::process::{Command, ExitStatus};
 
+#[derive(PartialEq)]
 pub enum Runner {
     // javascript
     Npm,
@@ -16,22 +16,6 @@ pub enum Runner {
     // other
     Justfile,
     Makefile,
-}
-
-impl Runner {
-    fn to_string(&self) -> Option<&'static str> {
-        match self {
-            Self::Npm => Some("npm"),
-            Self::Yarn => Some("yarn"),
-            Self::Pnpm => Some("pnpm"),
-            Self::Bun => Some("bun"),
-            Self::Deno => Some("deno"),
-
-            // implemented for javascript runner only
-            // becuase this function is usefull just for them
-            _ => None,
-        }
-    }
 }
 
 enum Language {
@@ -52,8 +36,12 @@ impl From<&Runner> for Language {
     }
 }
 
+fn spawn(command: &str, args: &[&str]) -> Result<ExitStatus, std::io::Error> {
+    Command::new(command).args(args).spawn()?.wait()
+}
+
 impl Runner {
-    const JAVASCRIPT_NO_RUN_WITH: [&'static str; 2] = ["install", "update"];
+    const JAVASCRIPT_SPECIAL_COMMANDS: [&'static str; 4] = ["install", "update", "add", "remove"];
 
     fn unalias_command<'a>(&self, command: &'a str) -> &'a str {
         if let Self::Cargo = *self {
@@ -66,45 +54,63 @@ impl Runner {
         }
 
         match command {
-            "i" => "install",
-            "u" => "update",
+            "a" => "add",
+            "b" => "build",
             "d" => "dev",
             "f" => "format",
+            "i" => "install",
             "l" => "lint",
-            "b" => "build",
-            "t" => "test",
             "p" => "preview",
             "s" => "start",
+            "t" => "test",
+            "u" => "update",
             _ => command,
         }
     }
 
-    pub fn run(&self, command: &str) -> Result<()> {
+    pub fn run(
+        &self,
+        command: &str,
+        args: &[&str],
+        quiet: bool,
+    ) -> Result<ExitStatus, std::io::Error> {
         let command = self.unalias_command(command);
-        let sh = Shell::new()?;
 
-        if let Language::Javascript = self.into() {
-            if Self::JAVASCRIPT_NO_RUN_WITH.contains(&command) {
-                let r = self.to_string().unwrap();
-                cmd!(sh, "{r} {command}").run()?;
+        let mut subargs = Vec::new();
+        let runner_name = match self {
+            Self::Npm => "npm",
+            Self::Yarn => "yarn",
+            Self::Pnpm => "pnpm",
+            Self::Bun => "bun",
+            Self::Deno => "deno",
+            Self::Cargo | Self::Xtask => "cargo",
+            Self::Justfile => "just",
+            Self::Makefile => "make",
+        };
 
-                return Ok(());
+        match self.into() {
+            Language::Javascript => {
+                if !Self::JAVASCRIPT_SPECIAL_COMMANDS.contains(&command) {
+                    let run = if *self == Self::Deno { "task" } else { "run" };
+
+                    subargs.push(run);
+                }
+            }
+            _ => {
+                if *self == Self::Xtask {
+                    subargs.extend(["run", "--package", "xtask", "--"]);
+                }
             }
         }
 
-        match self {
-            Self::Npm | Self::Yarn | Self::Pnpm | Self::Bun => {
-                let r = self.to_string().unwrap();
-                cmd!(sh, "{r} run {command}")
-            }
-            Self::Deno => cmd!(sh, "deno task {command}"),
-            Self::Xtask => cmd!(sh, "cargo run --package xtask -- {command}"),
-            Self::Cargo => cmd!(sh, "cargo {command}"),
-            Self::Makefile => cmd!(sh, "make {command}"),
-            Self::Justfile => cmd!(sh, "just {command}"),
-        }
-        .run()?;
+        subargs.push(command);
+        subargs.extend(args);
 
-        Ok(())
+        if !quiet {
+            let subargs = subargs.join(" ");
+            println!("$ {runner_name} {subargs}");
+        }
+
+        spawn(runner_name, &subargs)
     }
 }
