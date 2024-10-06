@@ -69,7 +69,7 @@ Every quoted string *(with at least one whitespace)* and flags until the next co
 Clone this repository and run install.sh
 
 ```bash
-$ git clone repo:url
+$ git clone https://github.com/eye-wave/ru.git
 $ ./install.sh
 
 # use with "--stable" or "-s"
