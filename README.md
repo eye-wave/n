@@ -1,25 +1,11 @@
 # ru~~n~~ - Use the Right Script Runner
 
+[![GitHub License](https://img.shields.io/github/license/ryanccn/nrr?style=flat-square&color=blue)](https://github.com/eye-wave/ru/blob/main/LICENSE)
+
+
 **ru** is a CLI tool inspired by [antfu-collective/ni](https://github.com/antfu-collective/ni), that automatically selects the correct script runner based on your project setup. 
 
-
 ## Usage
-
-Instead of
-```bash
-$ cargo format
-error: no such command: `format`
-
-	Did you mean `fmt`?
-```
-you can just run
-```bash
-$ ru format
-# or aliased
-$ ru f
-```
-
-## Examples
 For every `task / target / script / command` you use, ru will try to run it with whatever your project uses.
 
 `ru build` will execute the following commands, depending on your project setup:
@@ -32,14 +18,15 @@ $ ru build
 # bun run build
 # deno task build
 
+# make build
+
 # cargo run --package xtask -- build
 # cargo build
-
-# make build
-# just build
 ```
 
-To speedup your workflow even more, you can chain as many `tasks / targets / scripts / commands` as you want.
+> [!TIP]
+>
+> To speedup your workflow even more, you can chain as many `tasks / targets / scripts / commands` as you want.
 
 `ru f l` will execute the following commands, one after the other:
 ```bash
@@ -48,17 +35,17 @@ $ ru f l
 # npm run format
 # npm run lint
 
-# yarn run format
-# yarn run lint
+# cargo fmt
+# cargo clippy
 
 # ...
 ```
-
-## Advanced use
+It aslo comes with aliases for cargo since format and lint does not exist as subcommands in it.
 
 You can also add arguments and flags directly to commands.
+For example: 
 
-For example: `ru a "vite postcss tailwindcss" -d test`
+`ru a "vite postcss tailwindcss" -d test`
 ```bash
 $ ru add "vite postcss tailwindcss" --save-dev test
 
@@ -72,6 +59,10 @@ $ ru add "vite postcss tailwindcss" --save-dev test
 ```
 
 Every quoted string *(with at least one whitespace)* and flags until the next command, will be treated as subargs that will be executed with your command.
+> [!WARNING]
+>
+> If you want to pass a single subargument, you need to quote it and also put a space at the start or the end.
+> Example: `ru add "express "` to install express.js with whatever package manager you use at the moment
 
 ## Installation
 
