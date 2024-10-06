@@ -74,7 +74,7 @@ impl ScriptMap {
                 len += script.len() + 2;
             }
 
-            buffer += &("\n".repeat((i < 8) as usize * 2))
+            buffer += &("\n".repeat((i < Runner::NUMBER_OF_RUNNERS - 1) as usize * 2))
         }
 
         buffer
@@ -143,7 +143,6 @@ pub fn create_scripts_map<P: AsRef<Path>>(path: &P) -> Result<ScriptMap, std::io
 
                     Some(Runner::Makefile)
                 }
-                "justfile" => Some(Runner::Justfile),
                 "package.json" => {
                     if !script_map.has_js_runner() {
                         Some(Runner::Npm)

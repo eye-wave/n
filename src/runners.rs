@@ -15,7 +15,6 @@ pub enum Runner {
     Cargo,
 
     // other
-    Justfile,
     Makefile,
 }
 
@@ -32,7 +31,7 @@ impl From<&Runner> for Language {
                 Self::Javascript
             }
             Runner::Xtask | Runner::Cargo => Self::Rust,
-            Runner::Justfile | Runner::Makefile => Self::Other,
+            Runner::Makefile => Self::Other,
         }
     }
 }
@@ -47,7 +46,6 @@ impl From<&Runner> for &str {
             Runner::Deno => "deno",
             Runner::Cargo => "cargo",
             Runner::Xtask => "xtask",
-            Runner::Justfile => "just",
             Runner::Makefile => "make",
         }
     }
@@ -65,16 +63,17 @@ impl From<Runner> for usize {
             Runner::Pnpm => 2,
             Runner::Bun => 3,
             Runner::Deno => 4,
-            Runner::Justfile => 5,
-            Runner::Makefile => 6,
-            Runner::Xtask => 7,
-            Runner::Cargo => 8,
+            Runner::Makefile => 5,
+            Runner::Xtask => 6,
+            Runner::Cargo => 7,
         }
     }
 }
 
 impl Runner {
     const JAVASCRIPT_SPECIAL_COMMANDS: &[&str] = &["install", "update", "add", "remove"];
+
+    pub const NUMBER_OF_RUNNERS: usize = 8;
 
     pub(super) fn from_usize(value: usize) -> Option<Self> {
         match value {
@@ -83,10 +82,9 @@ impl Runner {
             2 => Some(Runner::Pnpm),
             3 => Some(Runner::Bun),
             4 => Some(Runner::Deno),
-            5 => Some(Runner::Justfile),
-            6 => Some(Runner::Makefile),
-            7 => Some(Runner::Xtask),
-            8 => Some(Runner::Cargo),
+            5 => Some(Runner::Makefile),
+            6 => Some(Runner::Xtask),
+            7 => Some(Runner::Cargo),
             _ => None,
         }
     }
