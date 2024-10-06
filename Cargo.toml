@@ -1,6 +1,6 @@
 [package]
 name = "ru"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 description = "Use the right script runner"
 license = "GPL-3.0-or-later"
@@ -9,3 +9,8 @@ build = "build.rs"
 
 [build-dependencies]
 regex-lite = "0.1.6"
+
+[dependencies]
+simd-json = "0.14.0"
+term_size = "0.3.2"
+walkdir = "2.5.0"

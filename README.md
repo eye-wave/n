@@ -85,6 +85,10 @@ $ ./install.sh
 # if you prefer building with stable release of rust
 ```
 
+## Special thanks
+[ryanccn/nrr](https://github.com/ryanccn/nrr)
+[antfu-collective/ni](https://github.com/antfu-collective/ni)
+
 ## License
 
 GPL 3.0

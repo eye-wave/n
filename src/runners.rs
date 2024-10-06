@@ -1,6 +1,7 @@
+use core::str;
 use std::process::{Command, ExitCode, ExitStatus};
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum Runner {
     // javascript
     Npm,
@@ -18,7 +19,7 @@ pub enum Runner {
     Makefile,
 }
 
-enum Language {
+pub enum Language {
     Javascript,
     Rust,
     Other,
@@ -36,23 +37,74 @@ impl From<&Runner> for Language {
     }
 }
 
+impl From<&Runner> for &str {
+    fn from(runner: &Runner) -> &'static str {
+        match runner {
+            Runner::Npm => "npm",
+            Runner::Yarn => "yarn",
+            Runner::Pnpm => "pnpm",
+            Runner::Bun => "bun",
+            Runner::Deno => "deno",
+            Runner::Cargo => "cargo",
+            Runner::Xtask => "xtask",
+            Runner::Justfile => "just",
+            Runner::Makefile => "make",
+        }
+    }
+}
+
 fn spawn(command: &str, args: &[&str]) -> Result<ExitStatus, std::io::Error> {
     Command::new(command).args(args).spawn()?.wait()
 }
 
-impl Runner {
-    const JAVASCRIPT_SPECIAL_COMMANDS: [&'static str; 4] = ["install", "update", "add", "remove"];
+impl From<Runner> for usize {
+    fn from(value: Runner) -> usize {
+        match value {
+            Runner::Npm => 0,
+            Runner::Yarn => 1,
+            Runner::Pnpm => 2,
+            Runner::Bun => 3,
+            Runner::Deno => 4,
+            Runner::Justfile => 5,
+            Runner::Makefile => 6,
+            Runner::Xtask => 7,
+            Runner::Cargo => 8,
+        }
+    }
+}
 
-    fn unalias_command<'a>(&self, command: &'a str) -> &'a str {
+impl Runner {
+    const JAVASCRIPT_SPECIAL_COMMANDS: &[&str] = &["install", "update", "add", "remove"];
+
+    pub(super) fn from_usize(value: usize) -> Option<Self> {
+        match value {
+            0 => Some(Runner::Npm),
+            1 => Some(Runner::Yarn),
+            2 => Some(Runner::Pnpm),
+            3 => Some(Runner::Bun),
+            4 => Some(Runner::Deno),
+            5 => Some(Runner::Justfile),
+            6 => Some(Runner::Makefile),
+            7 => Some(Runner::Xtask),
+            8 => Some(Runner::Cargo),
+            _ => None,
+        }
+    }
+
+    fn unalias_cargo<'a>(&self, command: &'a str) -> &'a str {
         if let Self::Cargo = *self {
             match command {
-                "d" | "dev" => return "run",
-                "f" | "format" => return "fmt",
-                "l" | "lint" => return "clippy",
-                _ => {}
+                "d" | "dev" => "run",
+                "f" | "format" => "fmt",
+                "l" | "lint" => "clippy",
+                _ => command,
             }
+        } else {
+            command
         }
+    }
 
+    pub fn unalias_command(command: &str) -> &str {
         match command {
             "a" => "add",
             "b" => "build",
@@ -74,23 +126,20 @@ impl Runner {
         args: &[&str],
         quiet: bool,
     ) -> Result<ExitStatus, std::io::Error> {
-        let command = self.unalias_command(command);
+        let command = &Self::unalias_command(command);
+        let command = &self.unalias_cargo(command);
 
         let mut subargs = Vec::new();
-        let runner_name = match self {
-            Self::Npm => "npm",
-            Self::Yarn => "yarn",
-            Self::Pnpm => "pnpm",
-            Self::Bun => "bun",
-            Self::Deno => "deno",
-            Self::Cargo | Self::Xtask => "cargo",
-            Self::Justfile => "just",
-            Self::Makefile => "make",
+        let runner_name: &str = self.into();
+        let runner_name = if *self == Self::Xtask {
+            "cargo"
+        } else {
+            runner_name
         };
 
         match self.into() {
             Language::Javascript => {
-                if !Self::JAVASCRIPT_SPECIAL_COMMANDS.contains(&command) {
+                if !Self::JAVASCRIPT_SPECIAL_COMMANDS.contains(command) {
                     let run = if *self == Self::Deno { "task" } else { "run" };
 
                     subargs.push(run);
