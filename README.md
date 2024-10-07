@@ -1,16 +1,16 @@
-# ru~~n~~ - Use the Right Script Runner
+# ~~ru~~n - Use the Right Script Runner
 
 [![GitHub License](https://img.shields.io/github/license/ryanccn/nrr?style=flat-square&color=blue)](https://github.com/eye-wave/ru/blob/main/LICENSE)
 
 
-**ru** is a CLI tool inspired by [antfu-collective/ni](https://github.com/antfu-collective/ni), that automatically selects the correct script runner based on your project setup. 
+**n** is a CLI tool inspired by [antfu-collective/ni](https://github.com/antfu-collective/ni), that automatically selects the correct script runner based on your project setup. 
 
 ## Usage
-For every `task / target / script / command` you use, ru will try to run it with whatever your project uses.
+For every `task / target / script / command` you use, n will try to run it with whatever your project uses.
 
-`ru build` will execute the following commands, depending on your project setup:
+`n build` will execute the following commands, depending on your project setup:
 ```bash
-$ ru build
+$ n build
 
 # npm run build
 # yarn run build
@@ -28,9 +28,9 @@ $ ru build
 >
 > To speedup your workflow even more, you can chain as many `tasks / targets / scripts / commands` as you want.
 
-`ru f l` will execute the following commands, one after the other:
+`n f l` will execute the following commands, one after the other:
 ```bash
-$ ru f l
+$ n f l
 
 # npm run format
 # npm run lint
@@ -45,9 +45,9 @@ It aslo comes with aliases for cargo since format and lint does not exist as sub
 You can also add arguments and flags directly to commands.
 For example: 
 
-`ru a "vite postcss tailwindcss" -d test`
+`n a "vite postcss tailwindcss" -d test`
 ```bash
-$ ru add "vite postcss tailwindcss" --save-dev test
+$ n add "vite postcss tailwindcss" --save-dev test
 
 # npm add vite postcss tailwindcss --save-dev
 # npm test
@@ -62,15 +62,20 @@ Every quoted string *(with at least one whitespace)* and flags until the next co
 > [!WARNING]
 >
 > If you want to pass a single subargument, you need to quote it and also put a space at the start or the end.
-> Example: `ru add "express "` to install express.js with whatever package manager you use at the moment
+> Example: `n add "express "` to install express.js with whatever package manager you use at the moment
 
 ## Installation
 
-Clone this repository and run install.sh
-
+Using curl:
 ```bash
-$ git clone https://github.com/eye-wave/ru.git
-$ ./install.sh
+curl -fsSL https://raw.githubusercontent.com/eye-wave/n/refs/heads/main/install.sh | bash
+```
+
+or clone this repo and
+```bash
+git clone https://github.com/eye-wave/n.git
+cd n/
+./install.sh
 
 # use with "--stable" or "-s"
 # if you prefer building with stable release of rust

@@ -1,5 +1,5 @@
 [package]
-name = "ru"
+name = "n"
 version = "0.3.2"
 edition = "2021"
 description = "Use the right script runner"

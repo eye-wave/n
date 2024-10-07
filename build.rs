@@ -1,7 +1,7 @@
 use regex_lite::{Captures, Regex};
 use std::fs;
 
-const HELP_MESSAGE: &str = "${A4}Usage${A0}: ru [SCRIPT1] [SCRIPT2] ...
+const HELP_MESSAGE: &str = "${A4}Usage${A0}: n [SCRIPT1] [SCRIPT2] ...
 
 ${A4}Default aliases${A0}:
   Cargo only:
