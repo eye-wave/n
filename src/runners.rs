@@ -109,9 +109,9 @@ impl Runner {
     fn unalias_cargo<'a>(&self, command: &'a str) -> &'a str {
         if let Self::Cargo = *self {
             match command {
-                "d" | "dev" => "run",
-                "f" | "format" => "fmt",
-                "l" | "lint" => "clippy",
+                "dev" => "run",
+                "format" => "fmt",
+                "lint" => "clippy",
                 _ => command,
             }
         } else {

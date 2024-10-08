@@ -4,6 +4,7 @@ use search::create_scripts_map;
 use std::{env, process::ExitCode};
 
 mod args;
+mod hashmap;
 mod parsers;
 mod runners;
 mod search;
@@ -62,9 +63,10 @@ fn main() -> Result<ExitCode, std::io::Error> {
             IterResult::GlobalFlag => match arg.as_str() {
                 "--version" | "-V" => print_exit!(env!("CARGO_PKG_VERSION")),
                 "--help" | "-h" => print_exit!(include_str!("../target/help_message.txt")),
-                "--list" | "-L" => print_exit!(script_map.display()),
+                "--list" | "-l" => print_exit!(script_map.display()),
+                "--list-all" | "-L" => print_exit!(script_map.display_all()),
                 "--quiet" | "-q" => is_quiet = true,
-                _ => {}
+                _ => eprintln!(r#"Received invalid flag "{}""#, arg),
             },
             IterResult::SubargFlag => subarg_stack.push(arg.as_str()),
             IterResult::Subargs => subarg_stack.extend(split_into_subargs(arg)),
