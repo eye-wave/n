@@ -1,0 +1,2 @@
+run test x repl exec install add remove update outdated link unlink patch pm
+build init create upgrade

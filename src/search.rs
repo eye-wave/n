@@ -1,5 +1,6 @@
 use crate::parsers::{parse_makefile_targets, parse_package_json_scripts};
 use crate::runners::{Language, Runner};
+use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
@@ -15,40 +16,56 @@ macro_rules! unwrap_or_continue {
 
 #[derive(Default, Debug)]
 pub struct ScriptMap {
-    buffer: [bool; 9],
+    runners: [bool; 9],
     scripts: [Vec<String>; 9],
+    map: HashMap<String,Runner>
 }
 
 impl ScriptMap {
     fn has_runner(&self, runner: Runner) -> bool {
         let i: usize = runner.into();
-        self.buffer[i]
+        self.runners[i]
     }
 
     fn has_js_runner(&self) -> bool {
-        self.buffer[0..=4].iter().any(|&v| v)
+        self.runners[0..=4].iter().any(|&v| v)
     }
 
-    fn add_scripts<V, S>(&mut self, runner: Runner, scripts: V)
+    fn add_runner(&mut self,runner: &Runner) {
+        let i: usize = runner.clone().into();
+        
+        self.runners[i] = true;
+        for command in runner.default_commands() {
+            let command = command.to_string();
+            
+            // Prevent defaults from overriding higher priority scripts
+            if !self.map.contains_key(&command) {
+                self.map.insert(command.to_string(), runner.clone());
+            }
+        }
+    }
+
+    fn add_scripts<V, S>(&mut self, runner: &Runner, scripts: V)
     where
         V: AsRef<[S]>,
         S: AsRef<str>,
     {
-        let i: usize = runner.into();
+        let i: usize = runner.clone().into();
 
-        self.buffer[i] = true;
-        self.scripts[i] = scripts
-            .as_ref()
-            .iter()
-            .map(|s| s.as_ref().to_string())
-            .collect();
+        self.runners[i] = true;
+        for script in scripts.as_ref() {
+            let script = script.as_ref();
+
+            self.scripts[i].push(script.to_string());
+            self.map.insert(script.to_string(), runner.clone());
+        }
     }
 
     pub fn display(&self) -> String {
         let mut buffer = String::new();
         let (width, _) = term_size::dimensions().unwrap_or((999, 0));
 
-        for (i, val) in self.buffer.iter().enumerate() {
+        for (i, val) in self.runners.iter().enumerate() {
             if !val {
                 continue;
             }
@@ -56,10 +73,16 @@ impl ScriptMap {
             let runner = Runner::from_usize(i).unwrap();
 
             buffer += (&runner).into();
-            buffer += ":\n    ";
+            buffer += ":";
 
             let scripts = &self.scripts[i];
-            let mut len = 4;
+            let mut len = 0;
+
+            if !scripts.is_empty() {
+                buffer += "\n    ";
+                len += 4;
+            }
+
             for (i, script) in scripts.iter().enumerate() {
                 if (len + script.len() + 2) > width {
                     buffer += "\n    ";
@@ -74,25 +97,27 @@ impl ScriptMap {
                 len += script.len() + 2;
             }
 
-            buffer += &("\n".repeat((i < Runner::NUMBER_OF_RUNNERS - 1) as usize * 2))
+            if !runner.default_commands().is_empty() {
+                buffer += "\n    ";
+                buffer += (&runner).into();
+                buffer += "'s default commands, view with (";
+                buffer += (&runner).into();
+                buffer += " --help)";
+            }
+
+            buffer += "\n"
         }
 
         buffer
     }
 
     pub fn no_runners(&self) -> bool {
-        self.buffer.iter().all(|f| !f)
+        self.runners.iter().all(|f| !f)
     }
 
-    pub fn find_runner(&self, script: &str) -> Option<Runner> {
+    pub fn find_runner(&self, script: &str) -> Option<&Runner> {
         let command = Runner::unalias_command(script);
-        for (i, scripts) in self.scripts.iter().enumerate() {
-            if scripts.contains(&command.to_string()) {
-                return Runner::from_usize(i);
-            }
-        }
-
-        None
+        self.map.get(command)
     }
 }
 
@@ -127,10 +152,7 @@ pub fn create_scripts_map<P: AsRef<Path>>(path: &P) -> Result<ScriptMap, std::io
                     }
                     _ => None,
                 },
-                "cargo.toml" | "cargo.lock" => {
-                    script_map.add_scripts(Runner::Cargo, ["format", "lint", "test", "dev"]);
-                    Some(Runner::Cargo)
-                }
+                "cargo.toml" | "cargo.lock" => Some(Runner::Cargo),
                 "makefile" => {
                     if script_map.has_runner(Runner::Makefile) {
                         continue;
@@ -138,7 +160,7 @@ pub fn create_scripts_map<P: AsRef<Path>>(path: &P) -> Result<ScriptMap, std::io
 
                     let path = current_level.join(filename);
                     if let Ok(scripts) = parse_makefile_targets(&path) {
-                        script_map.add_scripts(Runner::Makefile, &scripts);
+                        script_map.add_scripts(&Runner::Makefile, &scripts);
                     }
 
                     Some(Runner::Makefile)
@@ -161,9 +183,11 @@ pub fn create_scripts_map<P: AsRef<Path>>(path: &P) -> Result<ScriptMap, std::io
 
                 let path = current_level.join("package.json");
                 if let Ok(scripts) = parse_package_json_scripts(&path) {
-                    script_map.add_scripts(runner, &scripts);
+                    script_map.add_scripts(&runner, &scripts);
                 }
             }
+
+            script_map.add_runner(&runner);
         }
     }
 

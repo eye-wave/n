@@ -1,0 +1,2 @@
+run serve task repl eval add install uninstall remove bench cache check
+compile coverage doc fmt info jupyter lint init test publish upgrade

@@ -1,0 +1,7 @@
+add bench bloat build check clean clippy config doc fetch fix fmt
+generate-lockfile git-checkout help init install install-update
+install-update-config locate-project login logout metadata miri modules new
+owner package pkgid publish read-manifest remove report rm run rustc rustdoc
+search test tree uninstall update vendor verify-project version watch wipe
+yank
+dev format lint

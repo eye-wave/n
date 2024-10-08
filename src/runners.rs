@@ -1,6 +1,23 @@
 use core::str;
 use std::process::{Command, ExitCode, ExitStatus};
 
+pub fn bool_to_exit(status: bool) -> ExitCode {
+    match status {
+        true => ExitCode::SUCCESS,
+        false => ExitCode::FAILURE,
+    }
+}
+
+macro_rules! include_vec {
+    ($path:expr) => {{
+        const CONTENTS: &str = include_str!($path);
+        CONTENTS
+            .split_ascii_whitespace()
+            .filter(|s| !s.is_empty())
+            .collect::<Vec<&'static str>>()
+    }};
+}
+
 #[derive(PartialEq, Debug, Clone)]
 pub enum Runner {
     // javascript
@@ -160,11 +177,17 @@ impl Runner {
 
         spawn(runner_name, &subargs)
     }
-}
 
-pub fn bool_to_exit(status: bool) -> ExitCode {
-    match status {
-        true => ExitCode::SUCCESS,
-        false => ExitCode::FAILURE,
+    pub fn default_commands(&self) -> Vec<&'static str> {
+        match self {
+            Runner::Npm => include_vec!("./default/commands_npm.txt"),
+            Runner::Yarn => include_vec!("./default/commands_yarn.txt"),
+            Runner::Pnpm => include_vec!("./default/commands_pnpm.txt"),
+            Runner::Bun => include_vec!("./default/commands_bun.txt"),
+            Runner::Deno => include_vec!("./default/commands_deno.txt"),
+            Runner::Cargo => include_vec!("./default/commands_cargo.txt"),
+            Runner::Xtask => vec![],
+            Runner::Makefile => vec![],
+        }
     }
 }

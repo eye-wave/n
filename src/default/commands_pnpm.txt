@@ -1,0 +1,2 @@
+add install install link rebuild remove update audit licenses list outdated
+exec run start test cat-file cat-index find-hash pack publish root
