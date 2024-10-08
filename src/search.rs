@@ -177,13 +177,10 @@ pub fn create_scripts_map<P: AsRef<Path>>(path: &P) -> Result<ScriptMap, std::io
 
             let runner = unwrap_or_continue!(runner);
             if let Language::Javascript = Language::from(&runner) {
-                if script_map.has_js_runner() {
-                    continue;
-                }
-
                 let path = current_level.join("package.json");
                 if let Ok(scripts) = parse_package_json_scripts(&path) {
                     script_map.add_scripts(&runner, &scripts);
+                    script_map.add_runner(&Runner::Npm);
                 }
             }
 
