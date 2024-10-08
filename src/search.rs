@@ -18,7 +18,7 @@ macro_rules! unwrap_or_continue {
 pub struct ScriptMap {
     runners: [bool; 9],
     scripts: [Vec<String>; 9],
-    map: HashMap<String,Runner>
+    map: HashMap<String, Runner>,
 }
 
 impl ScriptMap {
@@ -31,13 +31,13 @@ impl ScriptMap {
         self.runners[0..=4].iter().any(|&v| v)
     }
 
-    fn add_runner(&mut self,runner: &Runner) {
+    fn add_runner(&mut self, runner: &Runner) {
         let i: usize = runner.clone().into();
-        
+
         self.runners[i] = true;
         for command in runner.default_commands() {
             let command = command.to_string();
-            
+
             // Prevent defaults from overriding higher priority scripts
             if !self.map.contains_key(&command) {
                 self.map.insert(command.to_string(), runner.clone());
